@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "dev": "concurrently npm:dev:*",
+        "dev:server": "npm run dev --prefix ./server",
+        "dev:app": "npm run ios --prefix ./app"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.0"
+    }
+}
