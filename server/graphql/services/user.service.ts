@@ -11,7 +11,8 @@ interface GetUserArgs {
 }
 interface UserInput {
     email: string,
-    username?: string,
+    password: string,
+    username?: string
 }
 
 const prisma = new PrismaClient();
@@ -33,10 +34,11 @@ export const getUser = async ({id, info}: GetUserArgs) => {
     });
 }
 
-export const createUser = async ({email, username}: UserInput) => {
+export const createUser = async ({email, password, username}: UserInput) => {
     const createdUser = await prisma.user.create({data: {
         email,
-        username,
+        password,
+        username
     }});
 
     return createdUser;

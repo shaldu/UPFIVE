@@ -13,7 +13,8 @@ export const userResolver = {
     },
     Mutation: {
         async createUser(_: any, {input}: Record<string,any>) {
-            return await createUser({email: input.email, username: input.username});
+            //validate input here before passing to service
+            return await createUser({email: input.email, password: input.password, username: input.username});
         },
         async updateUser() {},
         async deleteUser() {},
