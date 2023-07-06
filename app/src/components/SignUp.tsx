@@ -1,44 +1,24 @@
 import * as React from "react";
-import { useQuery, gql, useLazyQuery, useMutation, MutationFunctionOptions } from '@apollo/client';
 import { Box, Heading, VStack, FormControl, Input, Button, Center, NativeBaseProvider, HStack, Alert, Text, ScrollView, Stack, Divider } from "native-base";
+import API from "@src/api";
 
-const INSERT_SIGNUP = gql`
-        mutation Mutation($input: UserInput!) {
-            createUser(input: $input) {
-                email
-                username
-                message
-            }
-        }
-    `;
 
 export default () => {
+    let error = false;
     const [email, setEmail] = React.useState('');
     const [username, setUsername] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
-    const [createUser, { loading, error, data }] = useMutation(INSERT_SIGNUP);
 
-    const userInput = {
-        email: email ?? 'x',
-        username: username ?? 'x',
-        password: password ?? 'x',
-        // Add other input values as needed
-    };
-
-    const trySignUp = () => {
-        createUser({
-            variables: {
-                input: userInput,
-            },
-        });
+    const trySignUp = async () => {
+        const response = await API.get("/api");
+        
     }
 
-    console.log(error);
     
     return (
         <Center w="100%">
-            <Box safeArea p="2" w="90%" maxW="290" py="8" style={{opacity: loading ? 0.7 : 1}}>
+            <Box safeArea p="2" w="90%" maxW="290" py="8">
                 <Heading size="lg" color="coolGray.800" _dark={{
                     color: "warmGray.50"
                 }} fontWeight="semibold">
@@ -56,7 +36,7 @@ export default () => {
                                 <HStack space={2} flexShrink={1} alignItems="center">
                                     <Alert.Icon />
                                     <Text>
-                                        {data.createUser.message}
+                                        Error
                                     </Text>
                                 </HStack>
                             </HStack>
