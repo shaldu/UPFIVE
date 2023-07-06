@@ -11,7 +11,16 @@ export default () => {
     const [confirmPassword, setConfirmPassword] = React.useState('');
 
     const trySignUp = async () => {
-        const response = await API.get("/api");
+        const requestData = {
+            email: email,
+            username: username,
+            password: password,
+            confirmPassword: confirmPassword
+        };
+        // const response = await API.get('/api/users/a18b6681-72ec-43db-8632-b1f4640192ad');
+        const response = await API.post('/api/users', requestData);
+        console.log(response);
+        
         
     }
 
