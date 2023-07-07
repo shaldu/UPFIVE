@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Box, Heading, VStack, FormControl, Input, Button, Center, NativeBaseProvider, HStack, Alert, Text, ScrollView, Stack, Divider } from "native-base";
 import API from "@src/api";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default () => {
     let error = false;
@@ -19,11 +19,21 @@ export default () => {
         };
         // const response = await API.get('/api/users/a18b6681-72ec-43db-8632-b1f4640192ad');
         const response = await API.post('/api/users', requestData);
-        console.log(response);
-        
-        
+        const {status, newUser, sessionId} = response.data;
+
+        if (status === 200) {
+            //save session id in local storage
+            await AsyncStorage.setItem('sessionId', sessionId);
+            await AsyncStorage.setItem('userId', newUser.id);
+        }
+                
     }
 
+    const testAuth = async () => {
+        const userId = await AsyncStorage.getItem('userId');
+        const response = await API.get(`/api/users/${userId}`);
+        console.log(response.data);
+    }
     
     return (
         <Center w="100%">
@@ -71,6 +81,9 @@ export default () => {
                     </FormControl>
                     <Button mt="2" colorScheme="indigo" onPress={trySignUp}>
                         Sign up
+                    </Button>
+                    <Button mt="2" colorScheme="indigo" onPress={testAuth}>
+                        Test Authenticated Request
                     </Button>
                 </VStack>
             </Box>

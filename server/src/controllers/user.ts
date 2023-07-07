@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { createSession } from "./session";
 
 const prisma = new PrismaClient();
 
@@ -22,7 +23,19 @@ const getUser = async (req: Request, res: Response) => {
         const user = await prisma.user.findUnique({
             where: { id },
         });
-        res.json(user);
+
+        if (!user) {
+            return res.status(404).json({ error: { status: 404, message: 'User not found' } });
+        }
+
+        const responseData = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            createdAt: user.createdAt,
+        }
+
+        res.json(responseData);
     }
     catch (error) {
         console.error(error);
@@ -75,7 +88,7 @@ const createUser = async (req: Request, res: Response) => {
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     try {
-        const newUser = await prisma.user.create({
+        let newUser = await prisma.user.create({
             data: {
                 email,
                 username,
@@ -85,8 +98,9 @@ const createUser = async (req: Request, res: Response) => {
         });
 
         //TODO: create session for the user
-
-        res.json(newUser);
+        const sessionId = await createSession(newUser.id);
+        
+        res.json({status: 200, newUser, sessionId}); 
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });

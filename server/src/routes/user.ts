@@ -3,7 +3,7 @@ import { getUser, getUsers, createUser, updateUser, deleteUser } from '../contro
 import authenticateToken from '../middleware/auth';
 import authUser from '../middleware/user';
 
-router.get('/', authenticateToken, getUsers);
+// router.get('/', authenticateToken, getUsers);
 router.get('/:id', authUser, getUser);
 router.post('/', authenticateToken, createUser);
 router.put('/:id', authUser, updateUser);
