@@ -20,6 +20,6 @@ model User {
 model Session {
     id        String   @id @default(uuid())
     createdAt DateTime @default(now())
-    userId    String   @unique
+    userId    String   
     user      User     @relation(fields: [userId], references: [id])
 }

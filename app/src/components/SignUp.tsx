@@ -3,7 +3,11 @@ import { Box, Heading, VStack, FormControl, Input, Button, Center, NativeBasePro
 import API from "@src/api";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default () => {
+type Props = {
+    toggleView: () => void
+};
+
+export default ({ toggleView }: Props) => {
     let error = false;
     const [email, setEmail] = React.useState('');
     const [username, setUsername] = React.useState('');
@@ -18,23 +22,17 @@ export default () => {
             confirmPassword: confirmPassword
         };
         // const response = await API.get('/api/users/a18b6681-72ec-43db-8632-b1f4640192ad');
-        const response = await API.post('/api/users', requestData);
-        const {status, newUser, sessionId} = response.data;
+        const response = await API.post('/api/users/create', requestData);
+        const { status, newUser, sessionId } = response.data;
 
         if (status === 200) {
             //save session id in local storage
             await AsyncStorage.setItem('sessionId', sessionId);
             await AsyncStorage.setItem('userId', newUser.id);
         }
-                
+
     }
 
-    const testAuth = async () => {
-        const userId = await AsyncStorage.getItem('userId');
-        const response = await API.get(`/api/users/${userId}`);
-        console.log(response.data);
-    }
-    
     return (
         <Center w="100%">
             <Box safeArea p="2" w="90%" maxW="290" py="8">
@@ -49,7 +47,7 @@ export default () => {
                     Sign up to continue!
                 </Heading>
                 {error &&
-                    <Alert w="100%" variant={"outline-light"} colorScheme="danger" status="danger" style={{marginTop: "10px"}}>
+                    <Alert w="100%" variant={"outline-light"} colorScheme="danger" status="danger" style={{ marginTop: "10px" }}>
                         <VStack space={2} flexShrink={1} w="100%">
                             <HStack flexShrink={1} space={2} alignItems="center" justifyContent="space-between">
                                 <HStack space={2} flexShrink={1} alignItems="center">
@@ -82,9 +80,14 @@ export default () => {
                     <Button mt="2" colorScheme="indigo" onPress={trySignUp}>
                         Sign up
                     </Button>
-                    <Button mt="2" colorScheme="indigo" onPress={testAuth}>
-                        Test Authenticated Request
-                    </Button>
+                    <HStack mt="6" justifyContent="center">
+                        <Text>
+                            I already have a account.{" "}
+                        </Text>
+                        <Button onPress={toggleView} variant="unstyled" style={{ padding: 0, }}>
+                            Log in
+                        </Button>
+                    </HStack>
                 </VStack>
             </Box>
         </Center>

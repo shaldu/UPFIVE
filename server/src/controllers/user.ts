@@ -107,6 +107,39 @@ const createUser = async (req: Request, res: Response) => {
     }
 };
 
+const loginUser = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    //validate the data
+    if (!email || !password || email.trim() === '' || password.trim() === '') {
+        return res.status(400).json({ error: { status: 403, message: 'Please fill all required fields' }, data: { email } });
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: { status: 404, message: 'User not found' } });
+        }
+
+        const validPassword = bcrypt.compareSync(password, user.password);
+
+        if (!validPassword) {
+            return res.status(400).json({ error: { status: 403, message: 'Invalid password' }, data: { email } });
+        }
+
+        //everything is ok, create session for the user
+        const sessionId = await createSession(user.id);
+        
+        res.json({status: 200, user, sessionId});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 const updateUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { username, email } = req.body;
@@ -140,4 +173,4 @@ const deleteUser = async (req: Request, res: Response) => {
     }
 };
 
-export { getUser, createUser, updateUser, deleteUser, getUsers };
+export { getUser, createUser, updateUser, deleteUser, getUsers, loginUser};
