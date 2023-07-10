@@ -13,10 +13,12 @@ import { User } from '@src/@types/user';
 import HomePage from '@src/pages/home';
 import AccountPage from '@src/pages/account';
 import { createStackNavigator } from '@react-navigation/stack';
+import ProfilePage from '@src/pages/profile';
+import { useParams } from 'react-router-dom';
 
 export default function App() {
   const Stack = createStackNavigator(
-    
+
   );
   const [user, setUser] = useState<null | User>(null);
 
@@ -24,6 +26,9 @@ export default function App() {
     screens: {
       Home: 'home',
       Account: 'account',
+      Profile: {
+        path: 'u/:username',
+      },
     },
   };
 
@@ -31,14 +36,6 @@ export default function App() {
     prefixes: ['http://localhost:19006/'],
     config,
   };
-
-  const state = {
-    routes: [
-      { name: 'Home', params: { screen: 'Home' } },
-      { name: 'Account', params: { screen: 'Account' } },
-    ],
-  }
-
 
   useEffect(() => {
 
@@ -67,18 +64,10 @@ export default function App() {
           <Stack.Navigator>
             <Stack.Screen name="Home" component={HomePage} options={{ headerShown: false }} />
             <Stack.Screen name="Account" component={AccountPage} options={{ headerShown: false }} />
+            <Stack.Screen name="Profile" component={ProfilePage} options={{ headerShown: false }} />
           </Stack.Navigator>
         </UserContext.Provider>
       </NavigationContainer>
     </NativeBaseProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

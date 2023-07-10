@@ -4,6 +4,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+/**
+ * Checks if the user is authenticated to read the data
+ * The User needs a valid session / logged in, and the given API token must be valid
+ */
 export default async function authUser(req: Request, res: Response, next: NextFunction) {
     if (await isTokenAuth(req)) {
         //TODO: check if the user is authenticated to read the data
