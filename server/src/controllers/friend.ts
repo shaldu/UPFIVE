@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
 import { FriendRequestStatus, PrismaClient, Privacy } from '@prisma/client';
+import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
 
@@ -69,4 +69,57 @@ const sendFriendRequest = async (req: Request, res: Response) => {
 
 };
 
-export { sendFriendRequest };
+const getAllFriends = async (req: Request, res: Response) => {
+    const { profileId } = req.params;
+
+    if (!await isRequestedProfileIdSameAsSessionProfileId(profileId, req.headers['sessionid'] as string)) {
+        return res.status(403).json("Forbidden");
+    }
+
+
+    try {
+        const friends = await prisma.friends.findMany({
+            where: {
+                OR: [
+                    {
+                        userId: profileId
+                    },
+                    {
+                        friendId: profileId
+                    }
+                ]
+            },
+            include: {
+                user: true,
+                friend: true
+            },
+        });
+
+        return res.status(200).json( friends.map((d) => ({...d, user: {...d.user, updatedAt: undefined, id: undefined}, friend: {...d.friend, updatedAt: undefined, id:undefined}})));
+    }
+    catch (error) {
+        return res.status(500).json("Internal Server Error");
+    }
+};
+
+async function isRequestedProfileIdSameAsSessionProfileId(profileId: string, sessionId: string) {
+    //get profile from session
+    const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+        include: {
+            user: true,
+        }
+    });
+
+    if (session === null) {
+        return false;
+    }
+
+    const sessionProfileId = session.user.profileId;
+
+    if (profileId === sessionProfileId) {
+        return true;
+    }
+}
+
+export { sendFriendRequest, getAllFriends };
