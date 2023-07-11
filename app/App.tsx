@@ -9,7 +9,7 @@ import UserContext from '@src/userContext';
 import { useEffect, useState } from 'react';
 import API from "@src/api";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '@src/@types/user';
+import { UserProfile } from '@src/@types/user';
 import HomePage from '@src/pages/home';
 import AccountPage from '@src/pages/account';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -20,7 +20,7 @@ export default function App() {
   const Stack = createStackNavigator(
 
   );
-  const [user, setUser] = useState<null | User>(null);
+  const [user, setUser] = useState<null | UserProfile>(null);
 
   const config = {
     screens: {
