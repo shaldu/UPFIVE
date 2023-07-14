@@ -10,7 +10,11 @@ const sendFriendRequest = async (req: Request, res: Response) => {
         return res.status(404).json({ error: 'Profile not found' });
     }
 
-    //if they aer the same, return error
+    if (!await isRequestedProfileIdSameAsSessionProfileId(sentProfileId, req.headers['sessionid'] as string)) {
+        return res.status(403).json("Forbidden");
+    }
+
+
     if (sentProfileId === receiveProfileId) {
         return res.status(400).json({ error: 'You cannot send a friend request to yourself' });
     }
@@ -69,13 +73,66 @@ const sendFriendRequest = async (req: Request, res: Response) => {
 
 };
 
+const acceptFriendRequest = async (req: Request, res: Response) => {
+    const { sentProfileId, receiveProfileId } = req.body;
+
+
+    if (!sentProfileId || !receiveProfileId) {
+        return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    if (!await isRequestedProfileIdSameAsSessionProfileId(sentProfileId, req.headers['sessionid'] as string)) {
+        return res.status(403).json("Forbidden");
+    }
+
+    if (sentProfileId === receiveProfileId) {
+        return res.status(400).json({ error: 'You cannot send a friend request to yourself' });
+    }
+
+    try {
+        //update the status to accepted
+        const friends = await prisma.friends.findMany({
+            where: {
+                OR: [
+                    {
+                        userId: sentProfileId,
+                        friendId: receiveProfileId,
+                    },
+                    {
+                        userId: receiveProfileId,
+                        friendId: sentProfileId,
+                    }
+                ]
+            }
+        });
+
+        if (friends.length > 0) {
+            //check if the sentUser is the user that received the request if it is and the friend request is pending, set status to accepted
+            if (friends[0].status === FriendRequestStatus.PENDING) {
+                await prisma.friends.update({
+                    where: {
+                        id: friends[0].id
+                    },
+                    data: {
+                        status: FriendRequestStatus.ACCEPTED
+                    }
+                });
+            }
+
+            return res.status(400).json({ error: 'You are already friends with this user' });
+        }
+    } catch (error) {
+        return res.status(500).json("Internal Server Error");
+    }
+
+}
+
 const getAllFriends = async (req: Request, res: Response) => {
     const { profileId } = req.params;
 
     if (!await isRequestedProfileIdSameAsSessionProfileId(profileId, req.headers['sessionid'] as string)) {
         return res.status(403).json("Forbidden");
     }
-
 
     try {
         const friends = await prisma.friends.findMany({
@@ -95,12 +152,67 @@ const getAllFriends = async (req: Request, res: Response) => {
             },
         });
 
-        return res.status(200).json( friends.map((d) => ({...d, user: {...d.user, updatedAt: undefined, id: undefined}, friend: {...d.friend, updatedAt: undefined, id:undefined}})));
+        return res.status(200).json(friends.map((d) => ({ ...d, user: { ...d.user, updatedAt: undefined, id: undefined }, friend: { ...d.friend, updatedAt: undefined, id: undefined } })));
     }
     catch (error) {
         return res.status(500).json("Internal Server Error");
     }
 };
+
+const rejectFriendRequest = async (req: Request, res: Response) => {
+    removeFriend(req, res);
+}
+
+const deleteFriend = async (req: Request, res: Response) => {
+    removeFriend(req, res);
+}
+
+async function removeFriend(req: Request, res: Response) {
+    const { sentProfileId, receiveProfileId } = req.body;
+
+    if (!sentProfileId || !receiveProfileId) {
+        return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    if (!await isRequestedProfileIdSameAsSessionProfileId(sentProfileId, req.headers['sessionid'] as string)) {
+        return res.status(403).json("Forbidden");
+    }
+
+    if (sentProfileId === receiveProfileId) {
+        return res.status(400).json({ error: 'You cannot remove yourself lol' });
+    }
+
+    try {
+        //update the status to accepted
+        const friends = await prisma.friends.findMany({
+            where: {
+                OR: [
+                    {
+                        userId: sentProfileId,
+                        friendId: receiveProfileId,
+                    },
+                    {
+                        userId: receiveProfileId,
+                        friendId: sentProfileId,
+                    }
+                ]
+            }
+        });
+
+        if (friends.length > 0) {
+            //remove the entry
+            await prisma.friends.delete({
+                where: {
+                    id: friends[0].id
+                }
+            });
+        }
+    } catch (error) {
+        return res.status(500).json("Internal Server Error");
+    }
+
+}
+
 
 async function isRequestedProfileIdSameAsSessionProfileId(profileId: string, sessionId: string) {
     //get profile from session
@@ -122,4 +234,4 @@ async function isRequestedProfileIdSameAsSessionProfileId(profileId: string, ses
     }
 }
 
-export { sendFriendRequest, getAllFriends };
+export { sendFriendRequest, getAllFriends, acceptFriendRequest, rejectFriendRequest, deleteFriend };
